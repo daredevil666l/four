@@ -11,81 +11,121 @@
             background-color: #f5f5f5;
         }
         
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #333;
-            margin-bottom: 30px;
+        }
+        
+        .author {
+            text-align: center;
+            margin: 15px 0 25px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #2196F3;
+            padding: 10px;
+            border-bottom: 2px solid #2196F3;
+            background-color: #e7f3fe;
+            border-radius: 4px;
+        }
+        
+        .note {
+            text-align: center;
+            margin: 0 auto 25px;
+            padding: 10px 15px;
+            background-color: #fff3cd;
+            border-left: 6px solid #ffc107;
+            border-radius: 4px;
+            max-width: 80%;
+            font-size: 16px;
+        }
+        
+        .note::before {
+            content: "📝 ";
+            font-size: 20px;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
             background-color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .grid-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
         }
         
         table {
             border-collapse: collapse;
             margin: 0 auto;
-            background-color: #f9f9f9;
+            background-color: #fff;
         }
         
         td {
-            width: 80px;
-            height: 80px;
+            position: relative;
             text-align: center;
             vertical-align: middle;
-            position: relative;
-            padding: 5px;
+        }
+        
+        .node-cell {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+        }
+        
+        .edge-cell {
+            width: 35px;
+            height: 35px;
+            padding: 0;
         }
         
         .node {
-            background-color: #d1e7ff;
-            border-radius: 4px;
-            width: 100%;
-            height: 100%;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #000;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin: auto;
             font-weight: bold;
+            background-color: #fff;
         }
         
         .start-node {
-            background-color: #a8d08d;
+            background-color: #b3d9ff;
         }
         
         .end-node {
-            background-color: #f8cbad;
+            background-color: #b3d9ff;
         }
         
         .path-node {
-            background-color: #ffeb3b;
+            background-color: #b3d9ff;
         }
         
         .edge-input {
-            width: 50px;
+            width: 30px;
             text-align: center;
             border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 5px;
-        }
-        
-        .header-cell {
-            background-color: #e9e9e9;
+            padding: 2px;
             font-weight: bold;
+            font-size: 14px;
         }
         
         .button-container {
             text-align: center;
-            margin: 30px 0;
+            margin: 20px 0;
         }
         
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -99,21 +139,66 @@
         }
         
         .result {
-            margin: 30px auto;
-            padding: 20px;
+            margin: 20px auto;
+            padding: 15px;
             background-color: #e7f3fe;
             border-left: 6px solid #2196F3;
             border-radius: 4px;
-            max-width: 800px;
+        }
+        
+        /* Стрелки для визуализации пути */
+        .arrow-right::after {
+            content: "→";
+            position: absolute;
+            right: -20px;
+            font-weight: bold;
+        }
+        
+        .arrow-up::after {
+            content: "↑";
+            position: absolute;
+            top: -20px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .node {
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+            }
+            
+            .node-cell {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .edge-cell {
+                width: 25px;
+                height: 25px;
+            }
+            
+            .edge-input {
+                width: 25px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Вычисление кратчайшего пути</h1>
+        <div class="author">Выполнил Студент ИВТ-332Б Гаврилов А.А.</div>
+        <div class="note">Вы можете изменить значения весов путей, введя свои значения в соответствующие поля.</div>
         
-        <div id="grid-container">
-            <!-- Таблица будет создана с помощью JavaScript -->
+        <div class="grid-container">
+            <div id="grid-container">
+                <!-- Таблица будет создана с помощью JavaScript -->
+            </div>
         </div>
         
         <div class="button-container">
@@ -141,39 +226,36 @@
             function createTable(cols, rows) {
                 const table = document.createElement('table');
                 
-                // Создаем заголовок таблицы
-                const headerRow = document.createElement('tr');
+                // Значения горизонтальных ребер из изображения
+                const hEdgeValues = [
+                    [10, 14, 8, 10, 14, 13, 15],
+                    [11, 12, 10, 9, 14, 12, 12],
+                    [9, 9, 10, 11, 10, 10, 14],
+                    [8, 10, 13, 12, 12, 14, 15],
+                    [10, 14, 12, 10, 10, 13, 10],
+                    [9, 9, 10, 12, 15, 15, 9],
+                    [10, 8, 10, 15, 13, 12, 11]
+                ];
                 
-                // Пустая ячейка в верхнем левом углу
-                const emptyHeader = document.createElement('td');
-                emptyHeader.className = 'header-cell';
-                headerRow.appendChild(emptyHeader);
-                
-                // Заголовки столбцов
-                for (let col = 0; col < cols; col++) {
-                    const th = document.createElement('td');
-                    th.className = 'header-cell';
-                    th.textContent = col + 1;
-                    headerRow.appendChild(th);
-                }
-                
-                table.appendChild(headerRow);
+                // Значения вертикальных ребер из изображения
+                const vEdgeValues = [
+                    [10, 13, 10, 11, 12, 10, 10, 13],
+                    [12, 12, 12, 12, 11, 15, 11, 11],
+                    [11, 12, 11, 13, 10, 12, 12, 15],
+                    [10, 11, 10, 14, 10, 11, 13, 10],
+                    [12, 10, 11, 15, 15, 12, 14, 10],
+                    [15, 12, 12, 13, 14, 10, 8, 9]
+                ];
                 
                 // Создаем строки с узлами и ребрами
                 for (let row = 0; row < rows; row++) {
                     // Строка с узлами и горизонтальными ребрами
                     const nodeRow = document.createElement('tr');
                     
-                    // Заголовок строки
-                    const rowHeader = document.createElement('td');
-                    rowHeader.className = 'header-cell';
-                    rowHeader.textContent = row + 1;
-                    nodeRow.appendChild(rowHeader);
-                    
-                    // Узлы и горизонтальные ребра
                     for (let col = 0; col < cols; col++) {
                         // Ячейка с узлом
                         const nodeCell = document.createElement('td');
+                        nodeCell.className = 'node-cell';
                         
                         const nodeDiv = document.createElement('div');
                         nodeDiv.className = 'node';
@@ -187,7 +269,7 @@
                             nodeDiv.className += ' end-node';
                             nodeDiv.textContent = 'B';
                         } else {
-                            nodeDiv.textContent = `${row+1},${col+1}`;
+                            // Оставляем узел пустым для более компактного вида
                         }
                         
                         nodeCell.appendChild(nodeDiv);
@@ -196,13 +278,14 @@
                         // Горизонтальное ребро (если не последний столбец)
                         if (col < cols - 1) {
                             const hEdgeCell = document.createElement('td');
+                            hEdgeCell.className = 'edge-cell';
                             
                             const hInput = document.createElement('input');
                             hInput.type = 'number';
                             hInput.className = 'edge-input';
                             hInput.id = `h-edge-${row}-${col}`;
                             hInput.min = '0';
-                            hInput.value = '1';
+                            hInput.value = hEdgeValues[row][col]; // Значение из массива
                             
                             hEdgeCell.appendChild(hInput);
                             nodeRow.appendChild(hEdgeCell);
@@ -215,20 +298,17 @@
                     if (row < rows - 1) {
                         const edgeRow = document.createElement('tr');
                         
-                        // Пустая ячейка в начале строки
-                        const emptyCell = document.createElement('td');
-                        edgeRow.appendChild(emptyCell);
-                        
                         for (let col = 0; col < cols; col++) {
                             // Вертикальное ребро
                             const vEdgeCell = document.createElement('td');
+                            vEdgeCell.className = 'edge-cell';
                             
                             const vInput = document.createElement('input');
                             vInput.type = 'number';
                             vInput.className = 'edge-input';
                             vInput.id = `v-edge-${row}-${col}`;
                             vInput.min = '0';
-                            vInput.value = '1';
+                            vInput.value = vEdgeValues[row][col]; // Значение из массива
                             
                             vEdgeCell.appendChild(vInput);
                             edgeRow.appendChild(vEdgeCell);
@@ -236,6 +316,7 @@
                             // Пустая ячейка между вертикальными ребрами
                             if (col < cols - 1) {
                                 const emptyDiag = document.createElement('td');
+                                emptyDiag.className = 'edge-cell';
                                 edgeRow.appendChild(emptyDiag);
                             }
                         }
@@ -309,22 +390,34 @@
                     <p><strong>Путь:</strong> ${pathStr}</p>
                 `;
                 
-                // Сбрасываем выделение пути
+                // Сбрасываем выделение пути и стрелки
                 document.querySelectorAll('.node').forEach(node => {
-                    if (node.classList.contains('start-node')) {
-                        node.className = 'node start-node';
-                    } else if (node.classList.contains('end-node')) {
-                        node.className = 'node end-node';
+                    node.className = 'node';
+                    if (node.id === 'node-0-7') {
+                        node.className += ' end-node';
+                        node.textContent = 'B';
+                    } else if (node.id === 'node-6-0') {
+                        node.className += ' start-node';
+                        node.textContent = 'A';
                     } else {
-                        node.className = 'node';
+                        node.textContent = '';
                     }
                 });
                 
-                // Выделяем путь на сетке
-                path.forEach(p => {
+                // Выделяем путь на сетке и добавляем значения расстояний
+                path.forEach((p, index) => {
                     const node = document.getElementById(`node-${p.row}-${p.col}`);
-                    if (!node.classList.contains('start-node') && !node.classList.contains('end-node')) {
-                        node.className += ' path-node';
+                    node.className += ' path-node';
+                    node.textContent = distances[p.row][p.col];
+                    
+                    // Добавляем стрелки для визуализации пути
+                    if (index < path.length - 1) {
+                        const next = path[index + 1];
+                        if (next.row < p.row) {
+                            node.classList.add('arrow-up');
+                        } else if (next.col > p.col) {
+                            node.classList.add('arrow-right');
+                        }
                     }
                 });
             }

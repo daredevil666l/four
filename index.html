@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вычисление кратчайшего пути</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+        }
+        
+        td {
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+            padding: 5px;
+        }
+        
+        .node {
+            background-color: #d1e7ff;
+            border-radius: 4px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        
+        .start-node {
+            background-color: #a8d08d;
+        }
+        
+        .end-node {
+            background-color: #f8cbad;
+        }
+        
+        .path-node {
+            background-color: #ffeb3b;
+        }
+        
+        .edge-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        .header-cell {
+            background-color: #e9e9e9;
+            font-weight: bold;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .result {
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            border-radius: 4px;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Вычисление кратчайшего пути</h1>
+        
+        <div id="grid-container">
+            <!-- Таблица будет создана с помощью JavaScript -->
+        </div>
+        
+        <div class="button-container">
+            <button id="calculate-btn">Вычислить кратчайший путь</button>
+        </div>
+        
+        <div class="result" id="result">
+            <p>Результат будет отображен здесь после вычисления.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gridContainer = document.getElementById('grid-container');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultDiv = document.getElementById('result');
+            
+            // Создаем таблицу 8x7
+            createTable(8, 7);
+            
+            // Обработчик нажатия кнопки "Вычислить"
+            calculateBtn.addEventListener('click', calculateShortestPath);
+            
+            // Функция для создания таблицы
+            function createTable(cols, rows) {
+                const table = document.createElement('table');
+                
+                // Создаем заголовок таблицы
+                const headerRow = document.createElement('tr');
+                
+                // Пустая ячейка в верхнем левом углу
+                const emptyHeader = document.createElement('td');
+                emptyHeader.className = 'header-cell';
+                headerRow.appendChild(emptyHeader);
+                
+                // Заголовки столбцов
+                for (let col = 0; col < cols; col++) {
+                    const th = document.createElement('td');
+                    th.className = 'header-cell';
+                    th.textContent = col + 1;
+                    headerRow.appendChild(th);
+                }
+                
+                table.appendChild(headerRow);
+                
+                // Создаем строки с узлами и ребрами
+                for (let row = 0; row < rows; row++) {
+                    // Строка с узлами и горизонтальными ребрами
+                    const nodeRow = document.createElement('tr');
+                    
+                    // Заголовок строки
+                    const rowHeader = document.createElement('td');
+                    rowHeader.className = 'header-cell';
+                    rowHeader.textContent = row + 1;
+                    nodeRow.appendChild(rowHeader);
+                    
+                    // Узлы и горизонтальные ребра
+                    for (let col = 0; col < cols; col++) {
+                        // Ячейка с узлом
+                        const nodeCell = document.createElement('td');
+                        
+                        const nodeDiv = document.createElement('div');
+                        nodeDiv.className = 'node';
+                        nodeDiv.id = `node-${row}-${col}`;
+                        
+                        // Отмечаем начальный и конечный узлы
+                        if (row === rows - 1 && col === 0) {
+                            nodeDiv.className += ' start-node';
+                            nodeDiv.textContent = 'A';
+                        } else if (row === 0 && col === cols - 1) {
+                            nodeDiv.className += ' end-node';
+                            nodeDiv.textContent = 'B';
+                        } else {
+                            nodeDiv.textContent = `${row+1},${col+1}`;
+                        }
+                        
+                        nodeCell.appendChild(nodeDiv);
+                        nodeRow.appendChild(nodeCell);
+                        
+                        // Горизонтальное ребро (если не последний столбец)
+                        if (col < cols - 1) {
+                            const hEdgeCell = document.createElement('td');
+                            
+                            const hInput = document.createElement('input');
+                            hInput.type = 'number';
+                            hInput.className = 'edge-input';
+                            hInput.id = `h-edge-${row}-${col}`;
+                            hInput.min = '0';
+                            hInput.value = '1';
+                            
+                            hEdgeCell.appendChild(hInput);
+                            nodeRow.appendChild(hEdgeCell);
+                        }
+                    }
+                    
+                    table.appendChild(nodeRow);
+                    
+                    // Строка с вертикальными ребрами (если не последняя строка)
+                    if (row < rows - 1) {
+                        const edgeRow = document.createElement('tr');
+                        
+                        // Пустая ячейка в начале строки
+                        const emptyCell = document.createElement('td');
+                        edgeRow.appendChild(emptyCell);
+                        
+                        for (let col = 0; col < cols; col++) {
+                            // Вертикальное ребро
+                            const vEdgeCell = document.createElement('td');
+                            
+                            const vInput = document.createElement('input');
+                            vInput.type = 'number';
+                            vInput.className = 'edge-input';
+                            vInput.id = `v-edge-${row}-${col}`;
+                            vInput.min = '0';
+                            vInput.value = '1';
+                            
+                            vEdgeCell.appendChild(vInput);
+                            edgeRow.appendChild(vEdgeCell);
+                            
+                            // Пустая ячейка между вертикальными ребрами
+                            if (col < cols - 1) {
+                                const emptyDiag = document.createElement('td');
+                                edgeRow.appendChild(emptyDiag);
+                            }
+                        }
+                        
+                        table.appendChild(edgeRow);
+                    }
+                }
+                
+                gridContainer.appendChild(table);
+            }
+            
+            // Функция для вычисления кратчайшего пути
+            function calculateShortestPath() {
+                const cols = 8;
+                const rows = 7;
+                
+                // Создаем двумерный массив для хранения минимальных расстояний
+                const distances = Array(rows).fill().map(() => Array(cols).fill(Infinity));
+                
+                // Создаем двумерный массив для хранения предыдущих узлов в пути
+                const previous = Array(rows).fill().map(() => Array(cols).fill(null));
+                
+                // Начальная точка (нижний левый угол)
+                distances[rows-1][0] = 0;
+                
+                // Динамическое программирование для нахождения кратчайшего пути
+                for (let row = rows - 1; row >= 0; row--) {
+                    for (let col = 0; col < cols; col++) {
+                        // Если мы не в начальной точке
+                        if (!(row === rows - 1 && col === 0)) {
+                            // Проверяем путь снизу (если возможно)
+                            if (row < rows - 1) {
+                                const edgeValue = parseInt(document.getElementById(`v-edge-${row}-${col}`).value) || 0;
+                                const newDistance = distances[row + 1][col] + edgeValue;
+                                
+                                if (newDistance < distances[row][col]) {
+                                    distances[row][col] = newDistance;
+                                    previous[row][col] = { row: row + 1, col: col };
+                                }
+                            }
+                            
+                            // Проверяем путь слева (если возможно)
+                            if (col > 0) {
+                                const edgeValue = parseInt(document.getElementById(`h-edge-${row}-${col-1}`).value) || 0;
+                                const newDistance = distances[row][col - 1] + edgeValue;
+                                
+                                if (newDistance < distances[row][col]) {
+                                    distances[row][col] = newDistance;
+                                    previous[row][col] = { row: row, col: col - 1 };
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Восстанавливаем путь
+                const path = [];
+                let current = { row: 0, col: cols - 1 }; // Конечная точка (верхний правый угол)
+                
+                while (current) {
+                    path.unshift(current);
+                    current = previous[current.row][current.col];
+                }
+                
+                // Формируем результат
+                const shortestDistance = distances[0][cols - 1];
+                let pathStr = path.map(p => `(${p.row + 1},${p.col + 1})`).join(' → ');
+                
+                resultDiv.innerHTML = `
+                    <p><strong>Кратчайшее расстояние:</strong> ${shortestDistance}</p>
+                    <p><strong>Путь:</strong> ${pathStr}</p>
+                `;
+                
+                // Сбрасываем выделение пути
+                document.querySelectorAll('.node').forEach(node => {
+                    if (node.classList.contains('start-node')) {
+                        node.className = 'node start-node';
+                    } else if (node.classList.contains('end-node')) {
+                        node.className = 'node end-node';
+                    } else {
+                        node.className = 'node';
+                    }
+                });
+                
+                // Выделяем путь на сетке
+                path.forEach(p => {
+                    const node = document.getElementById(`node-${p.row}-${p.col}`);
+                    if (!node.classList.contains('start-node') && !node.classList.contains('end-node')) {
+                        node.className += ' path-node';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
